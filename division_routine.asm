@@ -10,9 +10,9 @@ PUSH D
 PUSH H
 
 ; Load values into registers from memory
-LHLD 9050H   ; Load divisor from memory location C050 to HL pair.
+LHLD 9050H   ; Load divisor from memory location 9050 to HL pair.
 PUSH H       ; Push divisor on the stack
-LHLD 9052H   ; Load dividend from memory location C052 to HL pair.
+LHLD 9052H   ; Load dividend from memory location 9052 to HL pair.
 PUSH H       ; Push dividend on the stack
 
 CALL DIVISION
