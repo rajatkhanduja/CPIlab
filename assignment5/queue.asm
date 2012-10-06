@@ -9,17 +9,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-;;;; PUSHINQUEUE ;;;;;
+;;;; ENQUEUE ;;;;;
 ; Pushes the first argument into the queue.
 ; Stores the return address at 8304
 ; If the queue is full, i.e. (tail + 1) % size = head, return 1 else return 0 ( for success)
 
-PUSHINQUEUE: nop
+ENQUEUE: nop
 ; Pop the return address
 POP H 
 SHLD 8304H
-POP H
-MV
 
 ; Check if the queue is full or not
 CALL QUEUEISFULL
@@ -32,13 +30,13 @@ MVI L,01H
 PUSH H
 JMP PUSHINDEXRETLABEL
 
+NOTFULLLABEL: nop
 ; Get starting address
-MVI A,8200
-LDAX D
+LHLD 8200H
+XCHG
 
 ; Get tail index
-MVI A,8206H
-LHLD H
+LHLD 8206H
 
 ; Multiply tail by 2 for 16-bit elements
 MVI B,00H
@@ -61,11 +59,31 @@ POP PSW
 ; Compute tail address
 DAD D     ; Add starting position of queue to index position of tail
 
-; Store new index of tail.  ;; TODO : MODULO
+; Store new index of tail. ;; TODO : MODULO
 INX B
-LHLD 8202H
-MVI A,8206H
-STAX B      ; Stores the new tail index
+LHLD 8202H  ; Get size of queue
+; Find modulo w.r.t. size
+PUSH PSW    ; Store registers
+PUSH D
+PUSH H
+; Call modulo
+PUSH B
+PUSH H
+CALL REMAINDER
+; Get result
+POP B       ; B now stores the final value of tail-index
+; Restore registers
+POP H
+POP D
+POP PSW
+; Store result (tail index) back in memory
+MVX H,B     ; HL <- BC
+LHLD 8206H
+
+; Store value at tail location
+POP H       ; Value to be enqued
+MVX D,B     ; DE <- BC
+SHLI
 
 ; Report success (return value 0)
 MVI H,00H
@@ -75,7 +93,7 @@ PUSHINDEXRETLABEL: nop
 LHLD 8304H
 PUSH H
 RET
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;; end of PUSHINQUEUE ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;; end of ENQUEUE ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; POPQUEUE ;;;;
 ; Get value of head index
@@ -120,6 +138,23 @@ PUSH H      ; This is the return value
 
 ; Compute new head index
 INX D       ; Increment the head pointer
+LHLD 8202H  ; Loads size into HL pair
+; Find modulo with respect to size
+; Save registers
+PUSH PSW
+PUSH H
+PUSH B
+; Call Modulo
+PUSH D
+PUSH H
+CALL REMAINDER
+; Get result
+POP D
+; Restore registers
+POP B
+POP H
+POP PSW
+
 XCHG        ; HL <-> DE
 SHLD 8204H   ; Copy the value in HL pair to 8204H
 
