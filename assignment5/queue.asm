@@ -17,7 +17,10 @@ PUSHINQUEUE: nop
 POP H 
 SHLD 8304H
 
-
+; Check if the queue is full or not
+CALL QUEUEISFULL
+POP H     ; Get output in HL pair
+MVI A, 
 
 ; Get starting address
 MVI A,8200
@@ -71,11 +74,15 @@ CMP E
 JNZ NOTSAMELABEL
 
 ; head = tail case
-PUSH 01H
+MVI H,00H
+MVI L,01H
+PUSH H
 JMP QUEUEISFULLRETURNLABEL
 
 NOTSAMELABEL: nop
-PUSH 00H
+MVI H,00H
+MVI L,00H
+PUSH H
 
 QUEUEISFULLRETURNLABEL: nop
 LHLD 8302H
