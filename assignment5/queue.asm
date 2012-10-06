@@ -17,24 +17,6 @@ PUSHINQUEUE: nop
 POP H 
 SHLD 8304H
 
-; Check if queue is not full ( (tail + 1) % size != head)
-; First increment tail and find its modulo w.r.t. size
-; If the value obtained by the above step is equal to head, queue is full
-; else queue has space.
-;LHLD 8206H  ; Get tail index
-;INX H       ; Increment tail
-;MVI 8202H
-;LDAX D      ; Get size of queue
-;INX D       ; increment the size because size of the queue in memory is 1 more than
-;            ; the number of elements that can be stored.
-;PUSH H      ; Push the tail-index (dividend)
-;PUSH D      ; Push the size (divisor)
-;CALL REMAINDER
-;POP D       ; Value of remainder
-;
-;MVI 
-;LDAX B      ; Get head index 
-; TODO : Compare Head and Modded-incremented tail. (B & D)
 
 
 ; Get starting address
@@ -47,6 +29,58 @@ LDAX D
 DAD D     ; Add starting position of queue to index position of tail
 
 
+;;; QUEUEISFULL ;;;
+; Check if queue is not full ( (tail + 1) % size != head)
+; First increment tail and find its modulo w.r.t. size
+; If the value obtained by the above step is equal to head, queue is full (ret 1)
+; else queue has space (ret 0)
+QUEUEISFULL: nop
+; Get the return address
+POP H
+SHLD 8302H  
+
+LHLD 8206H   ; Get tail index
+INX H       ; Increment tail
+MVI A,8202H
+LDAX D      ; Get size of queue
+INX D       ; increment the size because size of the queue in memory is 1 more than
+            ; the number of elements that can be stored.
+; Save registers before calling REMAINDER
+PUSH PSW
+PUSH B
+PUSH H
+; Push arguments
+PUSH H      ; Push the tail-index (dividend)
+PUSH D      ; Push the size (divisor)
+CALL REMAINDER
+; Get result
+POP D       ; Value of remainder
+; Restore registers as before
+POP H
+POP B
+POP PSW
+
+MVI A,8204
+LDAX B      ; Get head index 
+; Compare Head and Modded-incremented tail. (B & D)
+MOV A,B
+CMP D
+JNZ NOTSAMELABEL
+MOV A,C
+CMP E
+JNZ NOTSAMELABEL
+
+; head = tail case
+PUSH 01H
+JMP QUEUEISFULLRETURNLABEL
+
+NOTSAMELABEL: nop
+PUSH 00H
+
+QUEUEISFULLRETURNLABEL: nop
+LHLD 8302H
+PUSH H
+RET
 
 
 ;;;MOD;;;;;
