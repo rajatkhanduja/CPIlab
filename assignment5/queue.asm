@@ -6,6 +6,8 @@
 ;     not the size in the memory.
 ; Memory location 8204 holds the head pointer index (16-bits)
 ; Memory location 8206 holds the tail pointer index (16-bits)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 ;;;; PUSHINQUEUE ;;;;;
 ; Pushes the first argument into the queue.
@@ -26,7 +28,7 @@ CPI L,00H       ; if HL = 0000H
 JZ NOTFULLLABEL
 ; Failure to insert
 MVI H,00H
-MVI L,00H
+MVI L,01H
 PUSH H
 JMP PUSHINDEXRETLABEL
 
@@ -64,11 +66,15 @@ INX B
 MVI A,8206H
 STAX B      ; Stores the new tail index
 
+; Report success (return value 0)
+MVI H,00H
+MVI L,00H
+PUSH H
 PUSHINDEXRETLABEL: nop
 LHLD 8304H
 PUSH H
 RET
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;; end of PUSHINQUEUE ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; QUEUEISFULL ;;;
 ; Check if queue is not full ( (tail + 1) % size != head)
@@ -126,7 +132,7 @@ QUEUEISFULLRETURNLABEL: nop
 LHLD 8302H
 PUSH H
 RET
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;; end of QUEUEISFULL ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;MOD;;;;;
 ;;;;;;;;;;;
