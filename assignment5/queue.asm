@@ -59,9 +59,10 @@ POP PSW
 ; Compute tail address
 DAD D     ; Add starting position of queue to index position of tail
 
-; Store new index of tail. ;; TODO : MODULO
+; Store new index of tail. ;; 
 INX B
 LHLD 8202H  ; Get size of queue
+INX H       ; Increment HL (size)
 ; Find modulo w.r.t. size
 PUSH PSW    ; Store registers
 PUSH D
@@ -139,6 +140,7 @@ PUSH H      ; This is the return value
 ; Compute new head index
 INX D       ; Increment the head pointer
 LHLD 8202H  ; Loads size into HL pair
+INX H       ; increment size (HL)
 ; Find modulo with respect to size
 ; Save registers
 PUSH PSW
@@ -175,11 +177,11 @@ QUEUEISFULL: nop
 POP H
 SHLD 8302H  
 
-LHLD 8206H   ; Get tail index
+LHLD 8206H  ; Get tail index
 INX H       ; Increment tail
-MVI A,8202H
-LDAX D      ; Get size of queue
-INX D       ; increment the size because size of the queue in memory is 1 more than
+XCHG        ; DE <- HL
+LHLD 8202H  ; Get size of the queue in HL
+INX H       ; increment the size because size of the queue in memory is 1 more than
             ; the number of elements that can be stored.
 ; Save registers before calling REMAINDER
 PUSH PSW
@@ -196,13 +198,12 @@ POP H
 POP B
 POP PSW
 
-MVI A,8204
-LDAX B      ; Get head index 
+LHLD,8204H  ; Get head-index in HL
 ; Compare Head and Modded-incremented tail. (B & D)
-MOV A,B
+MOV A,H
 CMP D
 JNZ NOTSAMELABEL
-MOV A,C
+MOV A,L
 CMP E
 JNZ NOTSAMELABEL
 
