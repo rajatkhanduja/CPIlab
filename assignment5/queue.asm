@@ -22,7 +22,8 @@ SHLD 8304H
 ; Check if the queue is full or not
 CALL QUEUEISFULL
 POP H           ; Get output in HL pair
-CPI L,00H       ; if HL = 0000H
+MOV A,L         ; A <- L
+CPI 00H         ; if HL = 0000H
 JZ NOTFULLLABEL
 ; Failure to insert
 MVI H,00H
@@ -78,13 +79,17 @@ POP H
 POP D
 POP PSW
 ; Store result (tail index) back in memory
-MVX H,B     ; HL <- BC
+MOV H,B     ; H <- B
+MOV L,C     ; L <- C
 LHLD 8206H
 
 ; Store value at tail location
 POP H       ; Value to be enqued
-MVX D,B     ; DE <- BC
-SHLI
+MOV A,L     ; A <- L
+STAX D      ; Store value in A at address located by DE
+INX D       ; increment DE for the higher 8 bits' address
+MOV A,H     ; A <- H
+STAX D      
 
 ; Report success (return value 0)
 MVI H,00H
@@ -129,7 +134,9 @@ POP H
 DAD B
 
 ; Get the value at the address
-MVX B,H     ; Copy address to B
+; BC <- HL
+MOV B,H   
+MOV C,L
 STAX B      ; Read into A from address location in B
 MOV L,A     ; L <- A
 INX B       ; B = B + 1
@@ -234,7 +241,7 @@ POP H
 POP B
 POP PSW
 
-LHLD,8204H  ; Get head-index in HL
+LHLD 8204H  ; Get head-index in HL
 ; Compare Head and Modded-incremented tail. (B & D)
 MOV A,H
 CMP D
