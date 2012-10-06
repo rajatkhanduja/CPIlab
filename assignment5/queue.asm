@@ -79,7 +79,21 @@ RET
 
 ;;; POPQUEUE ;;;;
 ; Get value of head index
-MVI 
+POPQUEUE: nop
+POP H
+SHLD 8302H
+
+; Get the head index
+
+; Get the base address
+
+; Compute the head address
+
+; Store the value at the address
+
+; Compute new head index
+
+; Return the value at the address
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
