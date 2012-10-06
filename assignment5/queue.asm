@@ -63,6 +63,7 @@ DAD D     ; Add starting position of queue to index position of tail
 
 ; Store new index of tail.
 INX B
+LHLD 8202H
 MVI A,8206H
 STAX B      ; Stores the new tail index
 
@@ -75,6 +76,12 @@ LHLD 8304H
 PUSH H
 RET
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; end of PUSHINQUEUE ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; POPQUEUE ;;;;
+; Get value of head index
+MVI 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 ;;; QUEUEISFULL ;;;
 ; Check if queue is not full ( (tail + 1) % size != head)
