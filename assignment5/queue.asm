@@ -61,7 +61,7 @@ POP PSW
 ; Compute tail address
 DAD D     ; Add starting position of queue to index position of tail
 
-; Store new index of tail.
+; Store new index of tail.  ;; TODO : MODULO
 INX B
 LHLD 8202H
 MVI A,8206H
@@ -84,16 +84,49 @@ POP H
 SHLD 8302H
 
 ; Get the head index
+LHLD 8204H    ; Load the index in HL
+XCHG          ; DE <- HL
 
 ; Get the base address
+LHLD 8200H    ; The base address in HL
 
 ; Compute the head address
+PUSH H        ; Storing registers
+PUSH D        
+PUSH PSW
 
-; Store the value at the address
+; Call multiplication
+MVI H,00
+MVI L,02H
+PUSH H
+PUSH D
+CALL MULTIPLICATION
+POP B       ; Stores result in BC pair
+; Restore registers
+POP PSW     
+POP D
+POP H
+; Add 2*head_index to Base address
+DAD B
+
+; Get the value at the address
+MVX B,H     ; Copy address to B
+STAX B      ; Read into A from address location in B
+MOV L,A     ; L <- A
+INX B       ; B = B + 1
+STAX B      ; Read into A from address location in B
+MOV H,A     ; H <- A
+PUSH H      ; This is the return value
 
 ; Compute new head index
+INX D       ; Increment the head pointer
+XCHG        ; HL <-> DE
+SHLD 8204H   ; Copy the value in HL pair to 8204H
 
 ; Return the value at the address
+LHLD 8302H   ; Read return address
+PUSH H      ; Place address on stack
+RET
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
