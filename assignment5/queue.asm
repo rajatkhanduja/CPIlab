@@ -96,9 +96,9 @@ PUSH H
 RET
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; end of ENQUEUE ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;; POPQUEUE ;;;;
+;;; DEQUEUE ;;;;
 ; Get value of head index
-POPQUEUE: nop
+DEQUEUE: nop
 POP H
 SHLD 8302H
 
@@ -157,14 +157,50 @@ POP B
 POP H
 POP PSW
 
-XCHG        ; HL <-> DE
+XCHG         ; HL <-> DE
 SHLD 8204H   ; Copy the value in HL pair to 8204H
 
 ; Return the value at the address
 LHLD 8302H   ; Read return address
 PUSH H      ; Place address on stack
 RET
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; end of DEQUEUE ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;; QUEUEISEMPTY ;;;;;;;;
+; Check if queue is empty (head == tail)
+QUEUEISEMPTY: nop
+POP H
+SHLD 8302H
+
+LHLD 8204H  ; Get head index in HL
+XCHG        ; DE <- HL
+LHLD 8206H  ; Get tail index in HL
+; Compare HL and DE
+MOV A,H
+CMP D
+JNZ QUEUENOTEMPTY
+MOV A,L
+CMP E
+JNZ QUEUENOTEMPTY
+
+; Empty
+MVI H, 00H
+MVI L, 01H
+PUSH H
+JMP QUEUEISEMPTYRETURNLABEL
+
+; Not empty
+QUEUENOTEMPTY: nop
+MVI H,00H
+MVI L,00H
+PUSH H
+
+QUEUEISEMPTYRETURNLABEL: nop
+LHLD 8302H
+PUSH H
+RET
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; end of QUEUEISEMPTY ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 ;;; QUEUEISFULL ;;;
