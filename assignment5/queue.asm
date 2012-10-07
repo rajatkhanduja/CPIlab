@@ -205,10 +205,23 @@ RET
 
 ;;; DEQUEUE ;;;;
 ; Get value of head index
+; If the queue is empty, returns 0
 DEQUEUE: nop
 POP H
 SHLD 8300H
 
+; Check if the queue is empty or not. 
+CALL QUEUEISEMPTY
+POP H       ; Store result in H
+MOV A,L     ; A <- L
+CPI 00H   ; Compare A with 0
+JZ QUEUENOTEMPTYLABEL ; If not empty, continue
+MVI H,00H   ; Set HL <- 00H
+MVI L,00H   
+PUSH H      ; Put HL (0000H) on stack        
+JMP DEQUEUERETLABEL ; Jump to return statement
+
+QUEUENOTEMPTYLABEL: nop
 ; Get the head index
 LHLD QUEUEHEAD    ; Load the head index in HL
 XCHG          ; DE <- HL
@@ -268,6 +281,7 @@ POP PSW
 XCHG         ; HL <-> DE
 SHLD QUEUEHEAD   ; Copy the value in HL pair to QUEUEHEAD
 
+DEQUEUERETLABEL: nop
 ; Return the value at the address
 LHLD 8300H   ; Read return address
 PUSH H      ; Place address on stack
