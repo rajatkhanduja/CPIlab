@@ -9,6 +9,57 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
+MAINPROG: nop
+; Store 
+PUSH H
+PUSH D
+PUSH B
+PUSH PSW
+
+MVI H,80H
+MVI L,00
+PUSH H
+MVI H,00H
+MVI L,08H
+PUSH H
+CALL QUEUEINIT 
+
+; Call Enqueue
+MVI H,00H
+MVI L,05H
+PUSH H
+CALL ENQUEUE
+POP H
+
+POP PSW
+POP B
+POP D
+POP H
+
+HLT
+
+;;;;;;; QUEUEINIT ;;;;;;
+QUEUEINIT: nop
+POP H
+XCHG
+
+; Store size of queue (number of elements)
+POP H	   ; Size
+SHLD 8202H ; Store size at 8202H
+
+; Store starting position
+POP H	; Starting position
+SHLD 8200H ; Store starting position at 8200H
+
+MVI H,00H
+MVI L,00H
+SHLD 8204H ; Set head index = 0	
+SHLD 8206H ; Set tail index = 0
+
+PUSH D
+RET
+;;;;;;;;;;;;;; end of QUEUEINIT ;;;;;;;;;;;;;;;;;
+
 ;;;; ENQUEUE ;;;;;
 ; Pushes the first argument into the queue.
 ; Stores the return address at 8304
@@ -17,7 +68,7 @@
 ENQUEUE: nop
 ; Pop the return address
 POP H 
-SHLD 8304H
+SHLD 8300H
 
 ; Check if the queue is full or not
 CALL QUEUEISFULL
@@ -96,7 +147,7 @@ MVI H,00H
 MVI L,00H
 PUSH H
 PUSHINDEXRETLABEL: nop
-LHLD 8304H
+LHLD 8300H
 PUSH H
 RET
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; end of ENQUEUE ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -105,7 +156,7 @@ RET
 ; Get value of head index
 DEQUEUE: nop
 POP H
-SHLD 8302H
+SHLD 8300H
 
 ; Get the head index
 LHLD 8204H    ; Load the index in HL
@@ -218,7 +269,7 @@ RET
 QUEUEISFULL: nop
 ; Get the return address
 POP H
-SHLD 8302H  
+SHLD 8304H  
 
 LHLD 8206H  ; Get tail index
 INX H       ; Increment tail
@@ -231,8 +282,8 @@ PUSH PSW
 PUSH B
 PUSH H
 ; Push arguments
-PUSH H      ; Push the tail-index (dividend)
-PUSH D      ; Push the size (divisor)
+PUSH D      ; Push the tail-index (dividend)
+PUSH H      ; Push the size (divisor)
 CALL REMAINDER
 ; Get result
 POP D       ; Value of remainder
@@ -262,7 +313,7 @@ MVI L,00H
 PUSH H
 
 QUEUEISFULLRETURNLABEL: nop
-LHLD 8302H
+LHLD 8304H
 PUSH H
 RET
 ;;;;;;;;;;;;;;;;;;;;;;;;;;; end of QUEUEISFULL ;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -302,7 +353,7 @@ MULTIPLICATION: nop
 
 ;pop the return address
 POP H
-SHLD 8300H
+SHLD 8304H
 
 ;get arguments (numbers)
 POP B
@@ -319,6 +370,6 @@ decr: DAD D
 DCX B
 JMP loop
 exit: PUSH H
-LHLD 8300H
+LHLD 8304H
 PUSH H
 RET
