@@ -31,10 +31,14 @@ PUSH H
 CALL ENQUEUE
 POP H
 
+CALL DEQUEUE
+POP H
+; Restore variables
 POP PSW
 POP B
 POP D
 POP H
+
 
 HLT
 
@@ -219,7 +223,7 @@ XCHG         ; HL <-> DE
 SHLD 8204H   ; Copy the value in HL pair to 8204H
 
 ; Return the value at the address
-LHLD 8302H   ; Read return address
+LHLD 8300H   ; Read return address
 PUSH H      ; Place address on stack
 RET
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; end of DEQUEUE ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
