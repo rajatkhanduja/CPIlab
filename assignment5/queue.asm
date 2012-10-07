@@ -8,6 +8,11 @@
 ; Memory location 8206 holds the tail pointer index (16-bits)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+QUEUESTART: EQU 8200H
+QUEUESIZE: EQU 8202H
+QUEUEHEAD: EQU 8204H
+QUEUETAIL: EQU 8206H
+
 
 MAINPROG: nop
 ; Store 
@@ -60,16 +65,16 @@ XCHG
 
 ; Store size of queue (number of elements)
 POP H	   ; Size
-SHLD 8202H ; Store size at 8202H
+SHLD QUEUESIZE ; Store size at QUEUESIZE
 
 ; Store starting position
 POP H	; Starting position
-SHLD 8200H ; Store starting position at 8200H
+SHLD QUEUESTART ; Store starting position at 8200H
 
 MVI H,00H
 MVI L,00H
-SHLD 8204H ; Set head index = 0	
-SHLD 8206H ; Set tail index = 0
+SHLD QUEUEHEAD ; Set head index = 0	
+SHLD QUEUETAIL ; Set tail index = 0
 
 PUSH D
 RET
@@ -99,11 +104,11 @@ JMP ENQUEUERETLABEL
 
 NOTFULLLABEL: nop
 ; Get starting address
-LHLD 8200H
+LHLD QUEUESTART
 XCHG
 
 ; Get tail index
-LHLD 8206H
+LHLD QUEUETAIL
 
 ; Multiply tail by 2 for 16-bit elements
 MVI B,00H
@@ -130,7 +135,7 @@ PUSH H
 
 ; Store new index of tail. ;; 
 INX B
-LHLD 8202H  ; Get size of queue
+LHLD QUEUESIZE  ; Get size of queue
 INX H       ; Increment HL (size)
 ; Find modulo w.r.t. size
 PUSH PSW    ; Store registers
@@ -150,7 +155,7 @@ POP PSW
 ; Store result (tail index) back in memory
 MOV H,B     ; H <- B
 MOV L,C     ; L <- C
-SHLD 8206H
+SHLD QUEUETAIL
 
 POP B	; Get address to be stored at.
 
@@ -205,11 +210,11 @@ POP H
 SHLD 8300H
 
 ; Get the head index
-LHLD 8204H    ; Load the head index in HL
+LHLD QUEUEHEAD    ; Load the head index in HL
 XCHG          ; DE <- HL
 
 ; Get the base address
-LHLD 8200H    ; The base address in HL
+LHLD QUEUESTART    ; The base address in HL
 
 ; Compute the head address
 PUSH H        ; Storing registers
@@ -242,7 +247,7 @@ PUSH H      ; This is the return value
 
 ; Compute new head index
 INX D       ; Increment the head pointer
-LHLD 8202H  ; Loads size into HL pair
+LHLD QUEUESIZE  ; Loads size into HL pair
 INX H       ; increment size (HL)
 ; Find modulo with respect to size
 ; Save registers
@@ -261,7 +266,7 @@ POP H
 POP PSW
 
 XCHG         ; HL <-> DE
-SHLD 8204H   ; Copy the value in HL pair to 8204H
+SHLD QUEUEHEAD   ; Copy the value in HL pair to QUEUEHEAD
 
 ; Return the value at the address
 LHLD 8300H   ; Read return address
@@ -276,9 +281,9 @@ QUEUEISEMPTY: nop
 POP H
 SHLD 8302H
 
-LHLD 8204H  ; Get head index in HL
+LHLD QUEUEHEAD  ; Get head index in HL
 XCHG        ; DE <- HL
-LHLD 8206H  ; Get tail index in HL
+LHLD QUEUETAIL  ; Get tail index in HL
 ; Compare HL and DE
 MOV A,H
 CMP D
@@ -316,10 +321,10 @@ QUEUEISFULL: nop
 POP H
 SHLD 8304H  
 
-LHLD 8206H  ; Get tail index
+LHLD QUEUETAIL  ; Get tail index
 INX H       ; Increment tail
 XCHG        ; DE <- HL
-LHLD 8202H  ; Get size of the queue in HL
+LHLD QUEUESIZE  ; Get size of the queue in HL
 INX H       ; increment the size because size of the queue in memory is 1 more than
             ; the number of elements that can be stored.
 ; Save registers before calling REMAINDER
@@ -337,7 +342,7 @@ POP H
 POP B
 POP PSW
 
-LHLD 8204H  ; Get head-index in HL
+LHLD QUEUEHEAD  ; Get head-index in HL
 ; Compare Head and Modded-incremented tail. (B & D)
 MOV A,H
 CMP D
