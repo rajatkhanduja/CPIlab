@@ -1,8 +1,3 @@
-cpu "8085.tbl"
-hof "int8"
-
-org 9000h
-
 ;;; QUEUE ;;;;
 ;
 ; Memory location 8200 holds the starting position of the queue (16 bit-address)
@@ -25,7 +20,7 @@ MVI H,80H
 MVI L,00
 PUSH H
 MVI H,00H
-MVI L,08H
+MVI L,02H
 PUSH H
 CALL QUEUEINIT 
 
@@ -36,7 +31,20 @@ PUSH H
 CALL ENQUEUE
 POP H
 
+; Call Enqueue
+MVI H,00H
+MVI L,03H
+PUSH H
+CALL ENQUEUE
+POP H
+
 CALL DEQUEUE
+POP H
+
+CALL DEQUEUE
+POP H
+
+CALL QUEUEISEMPTY
 POP H
 ; Restore variables
 POP PSW
