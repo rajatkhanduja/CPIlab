@@ -126,7 +126,7 @@ POP PSW
 ; Compute tail address
 DAD D     ; Add starting position of queue to index position of tail
 PUSH H
-SHLD 8500H	; DEBUG : Store computed value of HL (address)
+;SHLD 8500H	; DEBUG : Store computed value of HL (address)
 
 ; Store new index of tail. ;; 
 INX B
@@ -141,6 +141,7 @@ PUSH B
 PUSH H
 CALL REMAINDER
 ; Get result
+
 POP B       ; B now stores the final value of tail-index
 ; Restore registers
 POP H
@@ -154,36 +155,36 @@ SHLD 8206H
 POP B	; Get address to be stored at.
 
 ;; DEBUG : Store Address at BC at 8502
-MOV H,B
-MOV L,C
-SHLD 8502H
+;MOV H,B
+;MOV L,C
+;SHLD 8502H
 ; Store value at tail location
 POP D       ; Value to be enqued
 ;; DEBUG : Store value in DE at 8504
-MOV H,D
-MOV L,E
-SHLD 8504H
+;MOV H,D
+;MOV L,E
+;SHLD 8504H
 ;;
 MOV A,E     ; A <- E
 ;; DEBUG
-STA 8506H
+;STA 8506H
 ;;
 STAX B      ; Store value in A at address located by BC
 INX B       ; increment BC for the higher 8 bits' address
 MOV A,D     ; A <- D
 ;; DEBUG
-STA 8507H
+;STA 8507H
 ;;
 STAX B     
 
 ;; DEBUG
-DCX B
-LDAX B
+;DCX B
+;LDAX B
 ;; DEBUG
-STA 8508H
-INX B
-LDAX B
-STA 8509H
+;STA 8508H
+;INX B
+;LDAX B
+;STA 8509H
 ;;
 ;;
 
