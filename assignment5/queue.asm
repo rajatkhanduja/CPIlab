@@ -1,3 +1,8 @@
+cpu "8085.tbl"
+hof "int8"
+
+org 9000h
+
 ;;; QUEUE ;;;;
 ;
 ; Memory location 8200 holds the starting position of the queue (16 bit-address)
@@ -37,10 +42,8 @@ POP H
 POP PSW
 POP B
 POP D
-POP H
 
-
-HLT
+RST 05
 
 ;;;;;;; QUEUEINIT ;;;;;;
 QUEUEINIT: nop
@@ -84,7 +87,7 @@ JZ NOTFULLLABEL
 MVI H,00H
 MVI L,01H
 PUSH H
-JMP PUSHINDEXRETLABEL
+JMP ENQUEUERETLABEL
 
 NOTFULLLABEL: nop
 ; Get starting address
@@ -114,6 +117,8 @@ POP PSW
 
 ; Compute tail address
 DAD D     ; Add starting position of queue to index position of tail
+PUSH H
+SHLD 8500H	; DEBUG : Store computed value of HL (address)
 
 ; Store new index of tail. ;; 
 INX B
@@ -136,21 +141,49 @@ POP PSW
 ; Store result (tail index) back in memory
 MOV H,B     ; H <- B
 MOV L,C     ; L <- C
-LHLD 8206H
+SHLD 8206H
 
+POP B	; Get address to be stored at.
+
+;; DEBUG : Store Address at BC at 8502
+MOV H,B
+MOV L,C
+SHLD 8502H
 ; Store value at tail location
-POP H       ; Value to be enqued
-MOV A,L     ; A <- L
-STAX D      ; Store value in A at address located by DE
-INX D       ; increment DE for the higher 8 bits' address
-MOV A,H     ; A <- H
-STAX D      
+POP D       ; Value to be enqued
+;; DEBUG : Store value in DE at 8504
+MOV H,D
+MOV L,E
+SHLD 8504H
+;;
+MOV A,E     ; A <- E
+;; DEBUG
+STA 8506H
+;;
+STAX B      ; Store value in A at address located by BC
+INX B       ; increment BC for the higher 8 bits' address
+MOV A,D     ; A <- D
+;; DEBUG
+STA 8507H
+;;
+STAX B     
+
+;; DEBUG
+DCX B
+LDAX B
+;; DEBUG
+STA 8508H
+INX B
+LDAX B
+STA 8509H
+;;
+;;
 
 ; Report success (return value 0)
 MVI H,00H
 MVI L,00H
 PUSH H
-PUSHINDEXRETLABEL: nop
+ENQUEUERETLABEL: nop
 LHLD 8300H
 PUSH H
 RET
@@ -163,7 +196,7 @@ POP H
 SHLD 8300H
 
 ; Get the head index
-LHLD 8204H    ; Load the index in HL
+LHLD 8204H    ; Load the head index in HL
 XCHG          ; DE <- HL
 
 ; Get the base address
@@ -173,7 +206,6 @@ LHLD 8200H    ; The base address in HL
 PUSH H        ; Storing registers
 PUSH D        
 PUSH PSW
-
 ; Call multiplication
 MVI H,00
 MVI L,02H
@@ -192,10 +224,10 @@ DAD B
 ; BC <- HL
 MOV B,H   
 MOV C,L
-STAX B      ; Read into A from address location in B
+LDAX B      ; Read into A from address location in B
 MOV L,A     ; L <- A
 INX B       ; B = B + 1
-STAX B      ; Read into A from address location in B
+LDAX B      ; Read into A from address location in B
 MOV H,A     ; H <- A
 PUSH H      ; This is the return value
 
