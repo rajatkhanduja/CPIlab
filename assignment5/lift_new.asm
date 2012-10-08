@@ -487,148 +487,132 @@ STA 890CH
 RET
 
 
+;;; QUEUE ;;;;
+;
+; Memory location 8200 holds the starting position of the queue (16 bit-address)
+; Memory location 8202 holds the size of the queue  (16-bits)
+;     Note that the size refers to the number of 16-bit elements that can be stored
+;     not the size in the memory.
+; Memory location 8204 holds the head pointer index (16-bits)
+; Memory location 8206 holds the tail pointer index (16-bits)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-
+;;;;;;;;QUEUEINIT;;;;;;;;;;;;
 QUEUEINIT: nop
 POP H
 XCHG
 
+; Store size of queue (number of elements)
+POP H	   ; Size
+SHLD QUEUESIZE  ; Store size at QUEUESIZE
 
-POP H	   
-SHLD QUEUESIZE 
-
-
-POP H	
-SHLD QUEUESTART 
+; Store starting position
+POP H	    ; Starting position
+SHLD QUEUESTART ; Store starting position at QUEUESTART
 
 MVI H,00H
 MVI L,00H
-SHLD QUEUEHEAD 
-SHLD QUEUETAIL 
+SHLD QUEUEHEAD  ; Set head index = 0
+SHLD QUEUETAIL  ; Set tail index = 0
 
 PUSH D
 RET
+;;;;;;;;;;;;;;;;;;;;;; end of QUEUEINIT ;;;;;;;;;;;;;;;;;;;;
 
-
-
-
-
-
+;;;; ENQUEUE ;;;;;
+; Pushes the first argument into the queue.
+; Stores the return address at 8304
+; If the queue is full, i.e. (tail + 1) % size = head, return 1 else return 0 ( for success)
 
 ENQUEUE: nop
-
+; Pop the return address
 POP H 
 SHLD 8300H
 
+; Check if the queue is full or not
 CALL QUEUEISFULL
-POP H           
-MOV A,L         
-CPI 00H         
-JZ NOTFULLLABEL
-
-MVI H,00H
+POP H             ; Get output in HL pair
+MOV A,L           ; A <- L
+CPI 00H           ; if HL = 0000H
+JZ NOTFULLLABEL   ; Jump to NOTFULLLABEL
+; Failure to insert
+MVI H,00H         ; else set HL to 01
 MVI L,01H
-PUSH H
+PUSH H            ; and return HL.
 JMP ENQUEUERETLABEL
 
 NOTFULLLABEL: nop
-
-; Times enqueue has been called when it is not full
+;DBG : Times enqueue has been called when it is not full
 LHLD 8208H
 INX H
 SHLD 8208H
-
+;;
+; Get starting address
 LHLD QUEUESTART
 XCHG
 
-
+; Get tail index
 LHLD QUEUETAIL
 
-
+; Multiply tail by 2 for 16-bit elements
 MVI B,00H
 MVI C,02H
-
+; Storing variables
 PUSH PSW
 PUSH D
 PUSH H
-
+; Calling multiplication
 PUSH B
 PUSH H
-CALL MULTIPLICATION   
-
-POP H       
-
-POP B       
-POP D 
+CALL MULTIPLICATION   ; Multiply by 2
+; Store result
+POP H         ; Product
+; Restore variables
+POP B         ; Stores the earlier value of Tail in BC                      
+POP D   
 POP PSW
 
-
-DAD D     
+; Compute tail address
+DAD D         ; Add starting position of queue to index position of tail * 2
 PUSH H
 
 
-
+; Store new index of tail
 INX B
 LHLD QUEUESIZE  
 ;INX H       
-
-PUSH PSW    
+; Find module w.r.t size
+PUSH PSW       ; store registers
 PUSH D
 PUSH H
-
+; Call modulo
 PUSH B
 PUSH H
 CALL REMAINDER
+; Get result
 
-
-POP B       
-
+POP B           ; B now stores the final value of tail-index
+; Restore registers
 POP H
 POP D
 POP PSW
-
-MOV H,B     
-MOV L,C     
+; Store result (tail index) back in memory
+MOV H,B         ; H <- B
+MOV L,C         ; L <- C
 SHLD QUEUETAIL
 
-POP B	
+POP B	          ; Get address to be stored at
 
-
-
-
-
-
-POP D       
-
-
-
-
-
-MOV A,E     
-
-
-
-STAX B      
-INX B       
-MOV A,D     
-
-
-
+; Store value at tail location
+POP D           ; Value to be enqueued
+MOV A,E         ; A <- E
+STAX B          ; Store value in A at address located by BC
+INX B           ; incrememnt BC for the higher bits' address
+MOV A,D         ; A <- D
 STAX B     
 
-
-
-
-
-
-
-
-
-
-
-
-
+; Report success (return value 0)
 MVI H,00H
 MVI L,00H
 PUSH H
@@ -636,109 +620,109 @@ ENQUEUERETLABEL: nop
 LHLD 8300H
 PUSH H
 RET
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;; end of ENQUEUE ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-
-
+;;; DEQUEUE ;;;;
+; Get value of head index
+; If the queue is empty, returns 0
 
 DEQUEUE: nop
 POP H
 SHLD 8300H
 
-
+; Check if the queue is empty or not.
 CALL QUEUEISEMPTY
-POP H       
-MOV A,L     
-CPI 00H   
-JZ QUEUENOTEMPTYLABEL 
-MVI H,00H   
-MVI L,00H   
-PUSH H      
-JMP DEQUEUERETLABEL 
+POP H           ; Store result in H
+MOV A,L         ; A <- L  
+CPI 00H         ; Compare A with 0
+JZ QUEUENOTEMPTYLABEL ; if not empty, continue
+MVI H,00H       ; Set HL <- 00H
+MVI L,00H       
+PUSH H          ; Put HL (0000H) on stack
+JMP DEQUEUERETLABEL ; Jump on return statement
 
 QUEUENOTEMPTYLABEL: nop
-
-; Times dequeue has been called when it is not empty
+; DBG : Times dequeue has been called when it is not empty
 LHLD 820AH
 INX H
 SHLD 820AH
 
+; Get the head index
 LHLD QUEUEHEAD    
-XCHG          
+XCHG            ; DE <- HL
 
+; Get the base address
+LHLD QUEUESTART ; The base address in HL   
 
-LHLD QUEUESTART    
-
-
-PUSH H        
+; Compute the head address
+PUSH H          ; Storing registers
 PUSH D        
 PUSH PSW
-
+; Call multiplication
 MVI H,00
 MVI L,02H
 PUSH H
 PUSH D
-CALL MULTIPLICATION
+CALL MULTIPLICATION   ; Multiply by 2
 POP B       
-
+; Store registers
 POP PSW     
 POP D
 POP H
-
+; Add 2 * head_index to base address
 DAD B
 
-
-
+; Get the value at the address
+; BC <- HL
 MOV B,H   
 MOV C,L
-LDAX B      
-MOV L,A     
-INX B       
-LDAX B      
-MOV H,A     
-PUSH H      
+LDAX B          ; Read into A from address location in B  
+MOV L,A         ; L <- A
+INX B           ; B = B + 1
+LDAX B          ; Read into A from address location in B
+MOV H,A         ; H <- A 
+PUSH H          ; This is the return value
 
-
-INX D       
-LHLD QUEUESIZE  
-;INX H       
-
-
+; Compute new head index
+INX D           ; Increment the head pointer
+LHLD QUEUESIZE  ; Loads size into HL pair
+;INX H        
+; Find modulo with respect to size
+; Save registers
 PUSH PSW
 PUSH H
 PUSH B
-
+; Call modulo
 PUSH D
 PUSH H
 CALL REMAINDER
-
+; Get result
 POP D
-
+; Restore registers
 POP B
 POP H
 POP PSW
 
-XCHG         
-SHLD QUEUEHEAD   
+XCHG             ; HL <-> DE
+SHLD QUEUEHEAD   ; Copy the value in HL pair to QUEUEHEAD
 
 DEQUEUERETLABEL: nop
-
-LHLD 8300H   
-PUSH H      
+; Return the value at the address
+LHLD 8300H        ; Read return address
+PUSH H            ; Place address on stack
 RET
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;; end of DEQUEUE ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-
-
-
+;;;;;;;; QUEUEISEMPTY ;;;;;;;;
+; Check if queue is empty (head == tail)
 QUEUEISEMPTY: nop
 POP H
 SHLD 8302H
 
-LHLD QUEUEHEAD  
-XCHG        
-LHLD QUEUETAIL  
-
+LHLD QUEUEHEAD    ; Get head index in HL
+XCHG              ; DE <- HL
+LHLD QUEUETAIL    ; Get tail index in HL
+; Compare HL and DE
 MOV A,H
 CMP D
 JNZ QUEUENOTEMPTY
@@ -746,13 +730,13 @@ MOV A,L
 CMP E
 JNZ QUEUENOTEMPTY
 
-
+; Empty
 MVI H, 00H
 MVI L, 01H
 PUSH H
 JMP QUEUEISEMPTYRETURNLABEL
 
-
+; Not empty
 QUEUENOTEMPTY: nop
 MVI H,00H
 MVI L,00H
@@ -762,42 +746,41 @@ QUEUEISEMPTYRETURNLABEL: nop
 LHLD 8302H
 PUSH H
 RET
+;;;;;;;;;;;;;;;;;;;;;;;;; end of QUEUEISEMPTY ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-
-
-
-
-
-
+;;; QUEUEISFULL ;;;
+; Check if queue is not full ( (tail + 1) % size != head)
+; First increment tail and find its modulo w.r.t. size
+; If the value obtained by the above step is equal to head, queue is full (ret 1)
+; else queue has space (ret 0)
 QUEUEISFULL: nop
 
 POP H
 SHLD 8304H  
 
-LHLD QUEUETAIL  
-INX H       
-XCHG        
-LHLD QUEUESIZE  
-;INX H       
+LHLD QUEUETAIL      ; Get tail index
+INX H               ; Increment tail
+XCHG                ; DE <-> HL
+LHLD QUEUESIZE      ; Get sizeo of the queue in HL
+;INX H          
             
-
+; Save registers before calling REMAINDER
 PUSH PSW
 PUSH B
 PUSH H
-
+; Push arguments
 PUSH D      
 PUSH H      
 CALL REMAINDER
-
+; Get result
 POP D       
-
+; Restore registers as before
 POP H
 POP B
 POP PSW
 
-LHLD QUEUEHEAD  
-
+LHLD QUEUEHEAD        ; Get head-index in HL
+;  Compare head and modded incremented tail (B & D)
 MOV A,H
 CMP D
 JNZ NOTSAMELABEL
@@ -805,7 +788,7 @@ MOV A,L
 CMP E
 JNZ NOTSAMELABEL
 
-
+; head = tail case
 MVI H,00H
 MVI L,01H
 PUSH H
@@ -820,12 +803,14 @@ QUEUEISFULLRETURNLABEL: nop
 LHLD 8304H
 PUSH H
 RET
+;;;;;;;;;;;;;;;;;;;;;;;;;;; end of QUEUEISFULL ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
+;;;MOD;;;;;
+;;;;;;;;;;;
 
-
-
+; 16-bit modulo
 REMAINDER: MVI H,00H
 
 POP H
@@ -850,9 +835,8 @@ PUSH H
 RET         
 
 
-
-
-
+;;; Multiplication ;;;;
+;;;;;;;;;;;;;;;;;;;;;;;
 MULTIPLICATION: nop
 
 

@@ -286,7 +286,7 @@ DEQUEUERETLABEL: nop
 LHLD 8300H   ; Read return address
 PUSH H      ; Place address on stack
 RET
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; end of DEQUEUE ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; end of DEQUEUE ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 ;;;;;;;; QUEUEISEMPTY ;;;;;;;;
@@ -322,7 +322,7 @@ QUEUEISEMPTYRETURNLABEL: nop
 LHLD 8302H
 PUSH H
 RET
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; end of QUEUEISEMPTY ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;; end of QUEUEISEMPTY ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 ;;; QUEUEISFULL ;;;
